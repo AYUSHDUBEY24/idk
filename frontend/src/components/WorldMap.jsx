@@ -1,271 +1,241 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+
+const LAYERS_DATA = [
+  { id: "pipelines",  icon: "⬡", label: "PIPELINES",             color: "#e07a3a" },
+  { id: "storage",    icon: "⊟", label: "STORAGE FACILITIES",    color: "#c8922a" },
+  { id: "fuel",       icon: "⊙", label: "FUEL SHORTAGES",        color: "#e05252" },
+  { id: "ai",         icon: "⬜", label: "AI DATA CENTERS",       color: "#4ab8e8" },
+  { id: "military",   icon: "✈", label: "MILITARY ACTIVITY",     color: "#4a8ae8", defaultOn: true },
+  { id: "ships",      icon: "⚓", label: "SHIP TRAFFIC",          color: "#3ddc84" },
+  { id: "trade",      icon: "⚓", label: "TRADE ROUTES",          color: "#c8922a" },
+  { id: "aviation",   icon: "✈", label: "AVIATION",              color: "#8a6ae0" },
+  { id: "protests",   icon: "⚑", label: "PROTESTS",              color: "#e0a83a" },
+  { id: "armed",      icon: "⚑", label: "ARMED CONFLICT EVENTS", color: "#e05252" },
+];
+
+const MARKERS = {
+  military: [
+    { lat: 28.6,  lng: 77.2,   label: "New Delhi — Op Zone" },
+    { lat: 19.0,  lng: 73.0,   label: "Mumbai — Naval Base" },
+    { lat: 13.0,  lng: 80.2,   label: "Chennai — Air Command" },
+    { lat: 51.5,  lng: -0.1,   label: "London — NATO HQ" },
+    { lat: 55.75, lng: 37.6,   label: "Moscow — Defense Min" },
+    { lat: 39.9,  lng: 116.4,  label: "Beijing — Command" },
+    { lat: 38.9,  lng: -77.0,  label: "Washington — Pentagon" },
+  ],
+  ships: [
+    { lat: 12.0,  lng: 45.0,   label: "Gulf of Aden — Convoy" },
+    { lat: 1.2,   lng: 104.0,  label: "Strait of Malacca" },
+    { lat: 30.0,  lng: 32.5,   label: "Suez — Transit" },
+    { lat: -6.0,  lng: 39.0,   label: "Dar es Salaam Port" },
+  ],
+  trade: [
+    { lat: 22.3,  lng: 114.2,  label: "Hong Kong — Trade Hub" },
+    { lat: 1.3,   lng: 103.8,  label: "Singapore Port" },
+    { lat: 51.9,  lng: 4.5,    label: "Rotterdam" },
+    { lat: 34.0,  lng: -118.2, label: "Los Angeles Port" },
+  ],
+  armed: [
+    { lat: 15.5,  lng: 32.5,   label: "Sudan Conflict Zone",  pulse: true },
+    { lat: 48.4,  lng: 35.0,   label: "Ukraine Frontline",    pulse: true },
+    { lat: 31.5,  lng: 35.0,   label: "Gaza — Active",        pulse: true },
+    { lat: 15.0,  lng: 42.0,   label: "Yemen — Air Strikes",  pulse: true },
+  ],
+  protests: [
+    { lat: 41.0,  lng: 29.0,   label: "Istanbul — Rally" },
+    { lat: 48.9,  lng: 2.3,    label: "Paris — Demonstration" },
+    { lat: -26.2, lng: 28.0,   label: "Johannesburg" },
+  ],
+  fuel: [
+    { lat: 23.6,  lng: -102.5, label: "Mexico — Shortage" },
+    { lat: -8.8,  lng: 13.2,   label: "Luanda Fuel Crisis" },
+    { lat: 6.5,   lng: 3.4,    label: "Lagos — Scarcity" },
+  ],
+  ai: [
+    { lat: 37.4,  lng: -122.1, label: "Silicon Valley DC" },
+    { lat: 53.3,  lng: -6.3,   label: "Dublin Cloud Hub" },
+    { lat: 35.7,  lng: 139.7,  label: "Tokyo Data Center" },
+    { lat: 22.5,  lng: 114.1,  label: "Shenzhen AI Campus" },
+  ],
+  pipelines: [
+    { lat: 57.0,  lng: 65.0,   label: "Trans-Siberian Pipeline" },
+    { lat: 41.0,  lng: 49.0,   label: "BTC Pipeline — Baku" },
+    { lat: 36.0,  lng: 58.0,   label: "Iran — Gas Corridor" },
+    { lat: 27.0,  lng: 53.0,   label: "Persian Gulf Line" },
+  ],
+  storage: [
+    { lat: 26.0,  lng: 50.5,   label: "Saudi Aramco — Ras Tanura" },
+    { lat: 29.3,  lng: 47.9,   label: "Kuwait Storage Terminal" },
+    { lat: 24.4,  lng: 54.4,   label: "Abu Dhabi Reserve" },
+  ],
+  aviation: [
+    { lat: 25.2,  lng: 55.4,   label: "Dubai — Aviation Hub" },
+    { lat: 51.5,  lng: -0.5,   label: "Heathrow — IFR Zone" },
+    { lat: 40.6,  lng: -73.8,  label: "JFK — Airspace" },
+    { lat: 35.5,  lng: 139.8,  label: "Tokyo Narita" },
+  ],
+};
+
+function markerHtml(color, pulse) {
+  if (pulse) {
+    return `<div style="width:22px;height:22px;position:relative;display:flex;align-items:center;justify-content:center;">
+      <div style="position:absolute;width:20px;height:20px;border-radius:50%;background:${color};opacity:0.25;animation:mapPulse 1.8s ease-out infinite;"></div>
+      <div style="width:8px;height:8px;border-radius:50%;background:${color};box-shadow:0 0 8px ${color};z-index:2;border:1px solid rgba(255,255,255,0.3);"></div>
+    </div>`;
+  }
+  return `<div style="width:9px;height:9px;border-radius:50%;background:${color};box-shadow:0 0 6px ${color};border:1px solid rgba(255,255,255,0.25);"></div>`;
+}
 
 export default function WorldMap() {
-  const canvasRef = useRef(null);
+  const mapRef   = useRef(null);
+  const mapObj   = useRef(null);
+  const groups   = useRef({});
+  const [search, setSearch]       = useState("");
+  const [states, setStates]       = useState(() => {
+    const s = {};
+    LAYERS_DATA.forEach((l) => (s[l.id] = !!l.defaultOn));
+    return s;
+  });
 
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    let animFrame;
-    let t = 0;
+    if (mapObj.current || !mapRef.current) return;
+    const L = window.L;
+    if (!L) return;
 
-    const dots = [
-      { x: 0.38, y: 0.42, color: "#3ddc84", pulse: true, label: "IOR" },
-      { x: 0.72, y: 0.48, color: "#e0a83a", pulse: false, label: "ME" },
-    ];
+    const map = L.map(mapRef.current, {
+      center: [20, 20], zoom: 2,
+      zoomControl: false, minZoom: 2, maxZoom: 10,
+      attributionControl: false,
+    });
 
-    function drawGrid(w, h) {
-      ctx.strokeStyle = "rgba(40,55,65,0.4)";
-      ctx.lineWidth = 0.5;
-      const cols = 24, rows = 12;
-      for (let i = 0; i <= cols; i++) {
-        ctx.beginPath();
-        ctx.moveTo((i / cols) * w, 0);
-        ctx.lineTo((i / cols) * w, h);
-        ctx.stroke();
-      }
-      for (let j = 0; j <= rows; j++) {
-        ctx.beginPath();
-        ctx.moveTo(0, (j / rows) * h);
-        ctx.lineTo(w, (j / rows) * h);
-        ctx.stroke();
-      }
-    }
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+      maxZoom: 19,
+    }).addTo(map);
 
-    // eslint-disable-next-line no-unused-vars
-    function drawContinent(ctx, path, w, h) {
-      ctx.save();
-      ctx.scale(w, h);
-      ctx.beginPath();
-      const p = new Path2D(path);
-      ctx.fillStyle = "rgba(45,60,55,0.7)";
-      ctx.fill(p);
-      ctx.strokeStyle = "rgba(80,110,90,0.5)";
-      ctx.lineWidth = 0.5 / w;
-      ctx.stroke(p);
-      ctx.restore();
-    }
+    LAYERS_DATA.forEach((layer) => {
+      const group = L.layerGroup();
+      (MARKERS[layer.id] || []).forEach((m) => {
+        const icon = L.divIcon({
+          html: markerHtml(layer.color, m.pulse),
+          className: "",
+          iconSize: [22, 22],
+          iconAnchor: [11, 11],
+        });
+        L.marker([m.lat, m.lng], { icon })
+          .bindPopup(
+            `<div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:#d4cfc8;background:#0f1214;border:1px solid #2a3038;padding:8px 12px;border-radius:3px;min-width:160px;">${m.label}</div>`,
+            { className: "goe-popup", closeButton: false }
+          )
+          .addTo(group);
+      });
+      groups.current[layer.id] = group;
+      if (layer.defaultOn) group.addTo(map);
+    });
 
-    function drawLandmasses(w, h) {
-      // Simplified world landmasses as rough shapes
-      ctx.save();
-      // North America
-      ctx.beginPath();
-      ctx.fillStyle = "rgba(40,60,52,0.8)";
-      ctx.strokeStyle = "rgba(70,100,80,0.6)";
-      ctx.lineWidth = 1;
-      const na = [
-        [0.05,0.12],[0.25,0.08],[0.30,0.15],[0.28,0.22],[0.22,0.30],
-        [0.18,0.50],[0.14,0.58],[0.10,0.52],[0.06,0.40],[0.04,0.25]
-      ];
-      ctx.beginPath();
-      na.forEach(([x,y],i) => i===0 ? ctx.moveTo(x*w,y*h) : ctx.lineTo(x*w,y*h));
-      ctx.closePath(); ctx.fill(); ctx.stroke();
-
-      // South America
-      const sa = [
-        [0.18,0.52],[0.26,0.50],[0.28,0.58],[0.26,0.72],[0.22,0.82],
-        [0.18,0.88],[0.15,0.80],[0.14,0.68],[0.15,0.58]
-      ];
-      ctx.beginPath();
-      sa.forEach(([x,y],i) => i===0 ? ctx.moveTo(x*w,y*h) : ctx.lineTo(x*w,y*h));
-      ctx.closePath(); ctx.fill(); ctx.stroke();
-
-      // Europe
-      const eu = [
-        [0.42,0.10],[0.52,0.08],[0.56,0.14],[0.54,0.22],[0.48,0.28],
-        [0.44,0.24],[0.42,0.18]
-      ];
-      ctx.beginPath();
-      eu.forEach(([x,y],i) => i===0 ? ctx.moveTo(x*w,y*h) : ctx.lineTo(x*w,y*h));
-      ctx.closePath(); ctx.fill(); ctx.stroke();
-
-      // Africa
-      const af = [
-        [0.44,0.28],[0.54,0.26],[0.58,0.34],[0.58,0.50],[0.54,0.64],
-        [0.50,0.70],[0.46,0.64],[0.42,0.50],[0.42,0.36]
-      ];
-      ctx.beginPath();
-      af.forEach(([x,y],i) => i===0 ? ctx.moveTo(x*w,y*h) : ctx.lineTo(x*w,y*h));
-      ctx.closePath(); ctx.fill(); ctx.stroke();
-
-      // Asia
-      const as_ = [
-        [0.54,0.08],[0.80,0.06],[0.88,0.10],[0.90,0.20],[0.86,0.32],
-        [0.80,0.38],[0.74,0.42],[0.68,0.40],[0.62,0.36],[0.56,0.30],
-        [0.54,0.22],[0.54,0.14]
-      ];
-      ctx.beginPath();
-      as_.forEach(([x,y],i) => i===0 ? ctx.moveTo(x*w,y*h) : ctx.lineTo(x*w,y*h));
-      ctx.closePath(); ctx.fill(); ctx.stroke();
-
-      // Australia
-      const au = [
-        [0.80,0.56],[0.92,0.54],[0.96,0.60],[0.94,0.70],[0.88,0.74],
-        [0.80,0.72],[0.76,0.66],[0.78,0.60]
-      ];
-      ctx.beginPath();
-      au.forEach(([x,y],i) => i===0 ? ctx.moveTo(x*w,y*h) : ctx.lineTo(x*w,y*h));
-      ctx.closePath(); ctx.fill(); ctx.stroke();
-
-      ctx.restore();
-    }
-
-    function drawDot(dot, w, h, t) {
-      const x = dot.x * w, y = dot.y * h;
-      if (dot.pulse) {
-        const r = 12 + Math.sin(t * 0.08) * 6;
-        const alpha = 0.2 + Math.sin(t * 0.08) * 0.15;
-        ctx.beginPath();
-        ctx.arc(x, y, r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(61,220,132,${alpha})`;
-        ctx.fill();
-
-        ctx.beginPath();
-        ctx.arc(x, y, 6, 0, Math.PI * 2);
-        ctx.fillStyle = "rgba(61,220,132,0.3)";
-        ctx.fill();
-      }
-      ctx.beginPath();
-      ctx.arc(x, y, 4, 0, Math.PI * 2);
-      ctx.fillStyle = dot.color;
-      ctx.fill();
-    }
-
-    function draw() {
-      const w = canvas.width, h = canvas.height;
-      ctx.clearRect(0, 0, w, h);
-
-      // Background gradient
-      const grad = ctx.createLinearGradient(0, 0, 0, h);
-      grad.addColorStop(0, "#0a1018");
-      grad.addColorStop(1, "#080c12");
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, w, h);
-
-      drawGrid(w, h);
-      drawLandmasses(w, h);
-
-      // Equator line
-      ctx.strokeStyle = "rgba(200,146,42,0.15)";
-      ctx.lineWidth = 1;
-      ctx.setLineDash([4, 8]);
-      ctx.beginPath();
-      ctx.moveTo(0, h * 0.46);
-      ctx.lineTo(w, h * 0.46);
-      ctx.stroke();
-      ctx.setLineDash([]);
-
-      dots.forEach(d => drawDot(d, w, h, t));
-
-      // Scan line
-      const scanY = ((t * 1.2) % h);
-      const scanGrad = ctx.createLinearGradient(0, scanY - 30, 0, scanY + 30);
-      scanGrad.addColorStop(0, "rgba(61,220,132,0)");
-      scanGrad.addColorStop(0.5, "rgba(61,220,132,0.04)");
-      scanGrad.addColorStop(1, "rgba(61,220,132,0)");
-      ctx.fillStyle = scanGrad;
-      ctx.fillRect(0, scanY - 30, w, 60);
-
-      t++;
-      animFrame = requestAnimationFrame(draw);
-    }
-
-    const resize = () => {
-      canvas.width = canvas.offsetWidth;
-      canvas.height = canvas.offsetHeight;
-    };
-    resize();
-    draw();
-    window.addEventListener("resize", resize);
-    return () => {
-      cancelAnimationFrame(animFrame);
-      window.removeEventListener("resize", resize);
-    };
+    mapObj.current = map;
+    return () => { map.remove(); mapObj.current = null; };
   }, []);
 
+  useEffect(() => {
+    const map = mapObj.current;
+    if (!map) return;
+    LAYERS_DATA.forEach((l) => {
+      const g = groups.current[l.id];
+      if (!g) return;
+      states[l.id] ? (!map.hasLayer(g) && g.addTo(map)) : (map.hasLayer(g) && map.removeLayer(g));
+    });
+  }, [states]);
+
+  const toggle = (id) => setStates((prev) => ({ ...prev, [id]: !prev[id] }));
+  const filtered = LAYERS_DATA.filter((l) => l.label.includes(search.toUpperCase()));
+
   return (
-    <div style={styles.wrapper}>
-      <div style={styles.header}>
-        <div style={styles.headerLeft}>
-          <span style={styles.globe}>🌐</span>
-          <span style={styles.title}>GLOBAL MARITIME & LAND DOMAIN</span>
+    <div style={s.root}>
+      <style>{`
+        @keyframes mapPulse { 0%{transform:scale(1);opacity:.4} 100%{transform:scale(3.5);opacity:0} }
+        .leaflet-container { background:#080c10 !important; }
+        .goe-popup .leaflet-popup-content-wrapper { background:transparent!important;border:none!important;box-shadow:none!important;padding:0!important; }
+        .goe-popup .leaflet-popup-tip-container { display:none!important; }
+        .goe-popup .leaflet-popup-content { margin:0!important; }
+        #layer-search::placeholder { color:#3a3835; }
+      `}</style>
+
+      {/* ── LAYERS PANEL ── */}
+      <div style={s.panel}>
+        <div style={s.pHead}>
+          <span style={s.pTitle}>LAYERS</span>
+          <div style={s.pIcons}>
+            <span style={s.iBtn}>?</span>
+            <span style={s.iBtn}>▼</span>
+          </div>
         </div>
-        <div style={styles.headerRight}>
-          <span style={styles.statusDot} />
-          <span style={styles.statusText}>LOW THREAT</span>
-          <span style={styles.statusDotOrange} />
-          <span style={styles.statusText}>ACTIVE MONITORING</span>
+
+        <div style={s.searchBox}>
+          <input
+            id="layer-search"
+            style={s.search}
+            placeholder="Search layers..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+
+        <div style={s.list}>
+          {filtered.map((l) => (
+            <div key={l.id} style={s.row} onClick={() => toggle(l.id)}>
+              <div style={{ ...s.cb, background: states[l.id] ? "#1a3a5c" : "transparent", borderColor: states[l.id] ? "#2a6aac" : "#2a3038" }}>
+                {states[l.id] && (
+                  <svg width="9" height="7" viewBox="0 0 9 7" fill="none">
+                    <path d="M1 3.5L3.5 6L8 1" stroke="#4ab8e8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                )}
+              </div>
+              <span style={{ ...s.lIcon, color: l.color }}>{l.icon}</span>
+              <span style={s.lLabel}>{l.label}</span>
+            </div>
+          ))}
+        </div>
+
+        <div style={s.pFoot}>
+          <span style={s.credit}>© <span style={{ color: "#4ab8e8" }}>Elie Habib</span> · Someone™</span>
         </div>
       </div>
-      <canvas ref={canvasRef} style={styles.canvas} />
+
+      {/* ── MAP ── */}
+      <div ref={mapRef} style={s.map} />
+
+      {/* ── ZOOM ── */}
+      <div style={s.zoom}>
+        <button style={s.zBtn} onClick={() => mapObj.current?.zoomIn()}>+</button>
+        <button style={s.zBtn} onClick={() => mapObj.current?.zoomOut()}>−</button>
+        <button style={{ ...s.zBtn, marginTop: 4 }} onClick={() => mapObj.current?.setView([20, 20], 2)}>⌂</button>
+      </div>
+
+      <button style={s.legend}>LEGEND</button>
+      <div style={s.webgl}>WEBGL</div>
     </div>
   );
 }
 
-const styles = {
-  wrapper: {
-    flex: 1,
-    background: "#0a0f14",
-    border: "1px solid #1a1e22",
-    borderRadius: "8px",
-    overflow: "hidden",
-    display: "flex",
-    flexDirection: "column",
-  },
-  header: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: "12px 16px",
-    borderBottom: "1px solid #1a1e22",
-    background: "rgba(10,15,20,0.8)",
-  },
-  headerLeft: {
-    display: "flex",
-    alignItems: "center",
-    gap: "8px",
-  },
-  globe: {
-    fontSize: "14px",
-  },
-  title: {
-    fontFamily: "'Rajdhani', sans-serif",
-    fontSize: "12px",
-    fontWeight: 600,
-    color: "#8a8880",
-    letterSpacing: "2px",
-  },
-  headerRight: {
-    display: "flex",
-    alignItems: "center",
-    gap: "8px",
-  },
-  statusDot: {
-    width: "8px",
-    height: "8px",
-    borderRadius: "50%",
-    background: "#3ddc84",
-    boxShadow: "0 0 6px #3ddc84",
-  },
-  statusDotOrange: {
-    width: "8px",
-    height: "8px",
-    borderRadius: "50%",
-    background: "#e0a83a",
-    boxShadow: "0 0 6px #e0a83a",
-  },
-  statusText: {
-    fontFamily: "'Share Tech Mono', monospace",
-    fontSize: "11px",
-    color: "#6a6865",
-    letterSpacing: "1px",
-    marginRight: "8px",
-  },
-  canvas: {
-    flex: 1,
-    width: "100%",
-    display: "block",
-  },
+const s = {
+  root: { flex: 1, position: "relative", overflow: "hidden", background: "#080c10", border: "1px solid #1a1e22", borderRadius: "8px", display: "flex" },
+  panel: { position: "absolute", top: 0, left: 0, width: "210px", height: "100%", background: "rgba(10,12,14,0.93)", borderRight: "1px solid #1e2428", zIndex: 1000, display: "flex", flexDirection: "column", backdropFilter: "blur(6px)" },
+  pHead: { display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 12px", borderBottom: "1px solid #1e2428" },
+  pTitle: { fontFamily: "'Share Tech Mono',monospace", fontSize: "12px", color: "#8a8880", letterSpacing: "2px" },
+  pIcons: { display: "flex", gap: "5px" },
+  iBtn: { width: "22px", height: "22px", background: "#1a1e22", border: "1px solid #252b30", borderRadius: "3px", color: "#6a6865", fontSize: "10px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Share Tech Mono',monospace", userSelect: "none" },
+  searchBox: { padding: "8px 10px", borderBottom: "1px solid #1e2428" },
+  search: { width: "100%", background: "#0f1214", border: "1px solid #252b30", borderRadius: "3px", color: "#8a8880", fontFamily: "'Share Tech Mono',monospace", fontSize: "11px", padding: "5px 8px", outline: "none", letterSpacing: "0.5px" },
+  list: { flex: 1, overflowY: "auto", padding: "4px 0" },
+  row: { display: "flex", alignItems: "center", gap: "8px", padding: "7px 12px", cursor: "pointer", userSelect: "none" },
+  cb: { width: "14px", height: "14px", border: "1px solid #2a3038", borderRadius: "2px", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", transition: "all .15s" },
+  lIcon: { fontSize: "12px", width: "16px", textAlign: "center", flexShrink: 0 },
+  lLabel: { fontFamily: "'Share Tech Mono',monospace", fontSize: "10px", color: "#8a8880", letterSpacing: "0.8px", whiteSpace: "nowrap" },
+  pFoot: { padding: "8px 12px", borderTop: "1px solid #1e2428" },
+  credit: { fontFamily: "'Share Tech Mono',monospace", fontSize: "10px", color: "#3a3835" },
+  map: { flex: 1, width: "100%", height: "100%", zIndex: 1 },
+  zoom: { position: "absolute", top: "10px", right: "10px", zIndex: 1001, display: "flex", flexDirection: "column", gap: "2px" },
+  zBtn: { width: "28px", height: "28px", background: "rgba(10,12,14,0.9)", border: "1px solid #2a3038", borderRadius: "3px", color: "#8a8880", fontSize: "14px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "monospace" },
+  legend: { position: "absolute", bottom: "12px", left: "50%", transform: "translateX(-50%)", zIndex: 1001, background: "rgba(10,12,14,0.9)", border: "1px solid #2a3038", borderRadius: "3px", color: "#8a8880", fontFamily: "'Share Tech Mono',monospace", fontSize: "11px", padding: "6px 18px", letterSpacing: "1.5px", cursor: "pointer" },
+  webgl: { position: "absolute", bottom: "8px", right: "8px", zIndex: 1001, background: "rgba(0,200,100,0.1)", border: "1px solid rgba(61,220,132,0.3)", color: "#3ddc84", fontFamily: "'Share Tech Mono',monospace", fontSize: "10px", padding: "3px 7px", borderRadius: "2px", letterSpacing: "1px" },
 };
