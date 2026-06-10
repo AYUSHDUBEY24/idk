@@ -4,7 +4,12 @@ import json
 import sys
 import os
 
-sys.path.append(os.path.join(os.path.dirname(__file__), "../ingestion"))
+sys.path.insert(
+    0,
+    os.path.abspath(
+        os.path.join(os.path.dirname(__file__), "../ingestion")
+    )
+)
 from store import get_connection
 
 nlp = spacy.load("en_core_web_sm")

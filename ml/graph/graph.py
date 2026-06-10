@@ -8,7 +8,12 @@ from dotenv import load_dotenv
 
 load_dotenv(os.path.join(os.path.dirname(__file__), "../.env"))
 
-sys.path.append(os.path.join(os.path.dirname(__file__), "../ingestion"))
+sys.path.insert(
+    0,
+    os.path.abspath(
+        os.path.join(os.path.dirname(__file__), "../ingestion")
+    )
+)
 from store import get_connection
 
 URI = os.getenv('NEO4J_URI')

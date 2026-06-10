@@ -30,29 +30,22 @@ export default function AIConsole() {
     setLoading(true);
 
     try {
-      const history = messages
-        .filter((m) => m.role !== "system")
-        .map((m) => ({ role: m.role === "assistant" ? "assistant" : "user", content: m.text }));
-
-      const response = await fetch("https://api.anthropic.com/v1/messages", {
+      const response = await fetch("http://localhost:8000/api/query", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
-          max_tokens: 1000,
-          system: SYSTEM_PROMPT,
-          messages: [...history, { role: "user", content: q }],
-        }),
+        body: JSON.stringify({ question: q }),
       });
 
       const data = await response.json();
-      const text = data.content?.map((c) => c.text || "").join("") || "No response received.";
+      const text = data.answer || "No response received.";
       setMessages((prev) => [...prev, { role: "assistant", text }]);
-    // eslint-disable-next-line no-unused-vars
     } catch (err) {
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", text: "Connection to Strategic Hub failed. Please retry." },
+        {
+          role: "assistant",
+          text: "Connection to GOE backend failed. Please retry.",
+        },
       ]);
     } finally {
       setLoading(false);
@@ -70,17 +63,28 @@ export default function AIConsole() {
         <div style={styles.headerIcon}>✦</div>
         <div>
           <div style={styles.title}>STRATEGIC AI CONSOLE</div>
-          <div style={styles.subtitle}>Geopolitical Intelligence Processor v4.0</div>
+          <div style={styles.subtitle}>
+            Geopolitical Intelligence Processor v4.0
+          </div>
         </div>
       </div>
 
       {/* Messages */}
       <div style={styles.messages}>
         {messages.map((msg, i) => (
-          <div key={i} style={msg.role === "user" ? styles.userMsg : styles.aiMsg}>
+          <div
+            key={i}
+            style={msg.role === "user" ? styles.userMsg : styles.aiMsg}
+          >
             {msg.role === "assistant" && (
               <div style={styles.aiAvatar}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style={{ color: "#c8922a" }}>
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  style={{ color: "#c8922a" }}
+                >
                   <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z" />
                 </svg>
               </div>
@@ -120,8 +124,19 @@ export default function AIConsole() {
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={handleKey}
         />
-        <button style={styles.sendBtn} onClick={handleSubmit} disabled={loading}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <button
+          style={styles.sendBtn}
+          onClick={handleSubmit}
+          disabled={loading}
+        >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
             <line x1="22" y1="2" x2="11" y2="13" />
             <polygon points="22 2 15 22 11 13 2 9 22 2" />
           </svg>
