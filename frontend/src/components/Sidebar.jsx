@@ -1,50 +1,96 @@
 import { useState, useEffect } from "react";
 
-const feedItems = [
-  {
-    id: 1,
-    time: "14:02 IST",
-    text: "Maritime activity spike detected in IOR. Surveillance active.",
-    status: "active",
-    icon: "●",
-  },
-  {
-    id: 2,
-    time: "13:45 IST",
-    text: "Trade agreement negotiations in Brussels entering Phase 3.",
-    status: "info",
-    icon: null,
-  },
-  {
-    id: 3,
-    time: "12:30 IST",
-    text: "Border watch alert: Regional instability reported near Sect. G.",
-    status: "warn",
-    icon: "△",
-  },
-  {
-    id: 4,
-    time: "11:15 IST",
-    text: "Semi-conductor supply chain diversifying through QUAD partners.",
-    status: "info",
-    icon: null,
-  },
-];
+const API = "http://localhost:8000/api";
 
 export default function Sidebar() {
   const [blinking, setBlinking] = useState(true);
+  const [articles, setArticles] = useState([]);
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
 
+  // Blinking dot
   useEffect(() => {
     const t = setInterval(() => setBlinking((b) => !b), 900);
     return () => clearInterval(t);
   }, []);
+
+  // Fetch real articles + stats from backend
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const [articlesRes, statsRes] = await Promise.all([
+          fetch(`${API}/articles?limit=10`),
+          fetch(`${API}/stats`),
+        ]);
+        const articlesData = await articlesRes.json();
+        const statsData = await statsRes.json();
+        setArticles(articlesData);
+        setStats(statsData);
+      } catch (err) {
+        console.error("Failed to fetch feed:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchData();
+
+    // Refresh every 5 minutes
+    const interval = setInterval(fetchData, 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  function formatTime(dateStr) {
+    if (!dateStr) return "—";
+    try {
+      const date = new Date(dateStr);
+      return (
+        date.toLocaleTimeString("en-IN", {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false,
+          timeZone: "Asia/Kolkata",
+        }) + " IST"
+      );
+    } catch {
+      return "—";
+    }
+  }
+
+  function getStatus(index) {
+    if (index === 0) return "active";
+    if (index % 4 === 2) return "warn";
+    return "info";
+  }
+
+  function getAccentColor(status) {
+    if (status === "warn") return "#e07a3a";
+    if (status === "active") return "#3ddc84";
+    return "#2a3038";
+  }
+
+  function getSourceLabel(source) {
+    const map = {
+      the_hindu_international: "THE HINDU",
+      the_hindu_national: "THE HINDU",
+      NDTV_India: "NDTV",
+      BBCnews_India: "BBC",
+      reuters_india: "REUTERS",
+      pib_india: "PIB",
+    };
+    return map[source] || source?.toUpperCase() || "FEED";
+  }
 
   return (
     <div style={styles.sidebar}>
       {/* Header */}
       <div style={styles.header}>
         <div>
-          <h2 style={styles.title}>Intelligence<br />Feed</h2>
+          <h2 style={styles.title}>
+            Intelligence
+            <br />
+            Feed
+          </h2>
           <p style={styles.subtitle}>Current Live Updates</p>
         </div>
         <div style={styles.hubId}>
@@ -53,46 +99,93 @@ export default function Sidebar() {
         </div>
       </div>
 
+      {/* Stats bar */}
+      {stats && (
+        <div style={styles.statsBar}>
+          <div style={styles.statItem}>
+            <span style={styles.statNumber}>{stats.total_articles}</span>
+            <span style={styles.statLabel}>ARTICLES</span>
+          </div>
+          <div style={styles.statDivider} />
+          <div style={styles.statItem}>
+            <span style={styles.statNumber}>{stats.total_entities}</span>
+            <span style={styles.statLabel}>ENTITIES</span>
+          </div>
+          <div style={styles.statDivider} />
+          <div style={styles.statItem}>
+            <span style={styles.statNumber}>
+              {stats.by_source?.length || 0}
+            </span>
+            <span style={styles.statLabel}>SOURCES</span>
+          </div>
+        </div>
+      )}
+
       {/* Feed Items */}
       <div style={styles.feedList}>
-        {feedItems.map((item) => (
-          <div key={item.id} style={styles.feedItem}>
-            <div
-              style={{
-                ...styles.feedAccent,
-                background: item.status === "warn"
-                  ? "#e07a3a"
-                  : item.status === "active"
-                  ? "#3ddc84"
-                  : "#2a3038",
-              }}
-            />
-            <div style={styles.feedContent}>
-              <div style={styles.feedMeta}>
-                <span style={styles.feedTime}>{item.time}</span>
-                {item.status === "active" && (
-                  <span
-                    style={{
-                      ...styles.activeDot,
-                      opacity: blinking ? 1 : 0.3,
-                    }}
-                  >●</span>
-                )}
-                {item.status === "warn" && (
-                  <span style={styles.warnIcon}>△</span>
-                )}
+        {loading ? (
+          <div style={styles.loadingText}>LOADING FEED...</div>
+        ) : articles.length === 0 ? (
+          <div style={styles.loadingText}>NO ARTICLES FOUND</div>
+        ) : (
+          articles.map((article, index) => {
+            const status = getStatus(index);
+            return (
+              <div
+                key={article.id}
+                style={styles.feedItem}
+                onClick={() =>
+                  article.url && window.open(article.url, "_blank")
+                }
+              >
+                <div
+                  style={{
+                    ...styles.feedAccent,
+                    background: getAccentColor(status),
+                  }}
+                />
+                <div style={styles.feedContent}>
+                  <div style={styles.feedMeta}>
+                    <span style={styles.feedTime}>
+                      {formatTime(article.published_at)}
+                    </span>
+                    <span style={styles.sourceTag}>
+                      {getSourceLabel(article.source)}
+                    </span>
+                    {status === "active" && (
+                      <span
+                        style={{
+                          ...styles.activeDot,
+                          opacity: blinking ? 1 : 0.3,
+                        }}
+                      >
+                        ●
+                      </span>
+                    )}
+                    {status === "warn" && (
+                      <span style={styles.warnIcon}>△</span>
+                    )}
+                  </div>
+                  <p style={styles.feedText}>{article.title}</p>
+                </div>
               </div>
-              <p style={styles.feedText}>{item.text}</p>
-            </div>
-          </div>
-        ))}
+            );
+          })
+        )}
       </div>
 
-      {/* Footer Button */}
+      {/* Footer */}
       <div style={styles.footer}>
-        <button style={styles.protocolBtn}>
-          INITIATE PROTOCOL
-        </button>
+        <div style={styles.footerStats}>
+          <span style={styles.liveIndicator}>
+            <span style={{ color: "#3ddc84", marginRight: "4px" }}>●</span>
+            LIVE SYNC
+          </span>
+          <span style={styles.footerCount}>
+            {stats ? `${stats.total_articles} RECORDS` : "—"}
+          </span>
+        </div>
+        <button style={styles.protocolBtn}>INITIATE PROTOCOL</button>
       </div>
     </div>
   );
@@ -152,16 +245,55 @@ const styles = {
     color: "#c8922a",
     letterSpacing: "1px",
   },
+  statsBar: {
+    display: "flex",
+    justifyContent: "space-around",
+    padding: "12px 16px",
+    borderBottom: "1px solid #1a1e22",
+    background: "#0d1013",
+  },
+  statItem: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    gap: "2px",
+  },
+  statNumber: {
+    fontFamily: "'Share Tech Mono', monospace",
+    fontSize: "16px",
+    color: "#c8922a",
+    fontWeight: 700,
+  },
+  statLabel: {
+    fontFamily: "'Share Tech Mono', monospace",
+    fontSize: "9px",
+    color: "#6a6865",
+    letterSpacing: "1px",
+  },
+  statDivider: {
+    width: "1px",
+    background: "#1a1e22",
+    alignSelf: "stretch",
+  },
   feedList: {
     flex: 1,
     padding: "12px 0",
     overflowY: "auto",
+  },
+  loadingText: {
+    fontFamily: "'Share Tech Mono', monospace",
+    fontSize: "11px",
+    color: "#6a6865",
+    textAlign: "center",
+    padding: "20px",
+    letterSpacing: "1px",
   },
   feedItem: {
     display: "flex",
     gap: "12px",
     padding: "12px 20px",
     borderBottom: "1px solid #13161a",
+    cursor: "pointer",
     transition: "background 0.2s",
   },
   feedAccent: {
@@ -176,13 +308,24 @@ const styles = {
   feedMeta: {
     display: "flex",
     alignItems: "center",
-    gap: "8px",
+    gap: "6px",
     marginBottom: "4px",
+    flexWrap: "wrap",
   },
   feedTime: {
     fontFamily: "'Share Tech Mono', monospace",
     fontSize: "11px",
     color: "#6a6865",
+    letterSpacing: "0.5px",
+  },
+  sourceTag: {
+    fontFamily: "'Share Tech Mono', monospace",
+    fontSize: "9px",
+    color: "#c8922a",
+    background: "#1a1612",
+    border: "1px solid #2a2218",
+    borderRadius: "2px",
+    padding: "1px 4px",
     letterSpacing: "0.5px",
   },
   activeDot: {
@@ -196,14 +339,34 @@ const styles = {
   },
   feedText: {
     fontFamily: "'Rajdhani', sans-serif",
-    fontSize: "14px",
+    fontSize: "13px",
     color: "#c0bbb4",
     lineHeight: 1.4,
     fontWeight: 500,
   },
   footer: {
-    padding: "16px 20px",
+    padding: "12px 20px 16px",
     borderTop: "1px solid #1a1e22",
+    display: "flex",
+    flexDirection: "column",
+    gap: "10px",
+  },
+  footerStats: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  liveIndicator: {
+    fontFamily: "'Share Tech Mono', monospace",
+    fontSize: "10px",
+    color: "#6a6865",
+    letterSpacing: "1px",
+  },
+  footerCount: {
+    fontFamily: "'Share Tech Mono', monospace",
+    fontSize: "10px",
+    color: "#c8922a",
+    letterSpacing: "1px",
   },
   protocolBtn: {
     width: "100%",

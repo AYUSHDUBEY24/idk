@@ -23,6 +23,7 @@ export default function Dashboard() {
           <IndiaPanel />
           <AIConsole />
         </div>
+        
       </div>
     </main>
   );
