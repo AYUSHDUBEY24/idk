@@ -10,32 +10,78 @@ import {
 } from "react-resizable-panels";
 
 export default function Dashboard() {
-  return (
-    <main style={styles.main}>
-      {/* Left column – Intelligence Feed */}
-      <div style={styles.leftCol}>
+ return (
+  <main style={styles.main}>
+    <Group orientation="horizontal" style={styles.group}>
+
+      {/* Sidebar */}
+      <Panel
+        defaultSize={28}
+        minSize={20}
+        style={styles.panel}
+      >
         <Sidebar />
-      </div>
+      </Panel>
 
-      {/* Right column */}
-      <div style={styles.rightCol}>
-        {/* Top – World Map */}
-        <div style={styles.mapRow}>
-          <WorldMap />
-        </div>
+      <Separator style={styles.separatorVertical} />
 
-        {/* Bottom row – India Analytics + AI Console */}
-        <div style={styles.bottomRow}>
-          <IndiaPanel />
-          <AIConsole />
-        </div>
-        
-      </div>
-    </main>
-  );
+      {/* Right Side */}
+      <Panel
+        defaultSize={72}
+        style={styles.panel}
+      >
+        <Group orientation="vertical" style={styles.group}>
+
+          {/* World Map */}
+          <Panel
+            defaultSize={50}
+            minSize={25}
+            style={styles.panel}
+          >
+            <WorldMap />
+          </Panel>
+
+          <Separator style={styles.separatorHorizontal} />
+
+          {/* Bottom Row */}
+          <Panel
+            defaultSize={50}
+            minSize={25}
+            style={styles.panel}
+          >
+            <Group orientation="horizontal" style={styles.group}>
+
+              <Panel
+                defaultSize={50}
+                minSize={25}
+                style={styles.panel}
+              >
+                <IndiaPanel />
+              </Panel>
+
+              <Separator style={styles.separatorVertical} />
+
+              <Panel
+                defaultSize={50}
+                minSize={25}
+                style={styles.panel}
+              >
+                <AIConsole />
+              </Panel>
+
+            </Group>
+          </Panel>
+
+        </Group>
+      </Panel>
+
+    </Group>
+  </main>
+);
 }
 
 const styles = {
+ 
   main: {
     height: "100%",
     padding: "12px",

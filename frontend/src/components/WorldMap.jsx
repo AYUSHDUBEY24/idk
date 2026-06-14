@@ -148,6 +148,9 @@ export default function WorldMap() {
       maxZoom: 10,
       attributionControl: false,
     });
+    setTimeout(() => {
+  map.invalidateSize();
+}, 300);
 
     L.tileLayer(
       "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
@@ -185,12 +188,13 @@ export default function WorldMap() {
       mapObj.current = null;
     };
   }, []);
-  useEffect(() => {
-    fetch("http://localhost:8000/api/graph/entities?limit=30")
-      .then((r) => r.json())
-      .then((data) => setIntelEntities(data))
-      .catch(() => {});
-  }, []);
+ useEffect(() => {
+  fetch("http://localhost:8000/api/graph/entities?limit=30")
+    .then((r) => r.json())
+    .then((data) => setIntelEntities(data))
+    .catch(() => {});
+}, []);
+
   useEffect(() => {
     const map = mapObj.current;
     if (!map) return;
@@ -272,82 +276,7 @@ export default function WorldMap() {
         #layer-search::placeholder { color:#3a3835; }
       `}</style>
 
-      {/* ── LAYERS PANEL ── */}
-      <div style={s.panel}>
-        <div style={s.pHead}>
-          <span style={s.pTitle}>LAYERS</span>
-          <div style={s.pIcons}>
-            <span style={s.iBtn}>?</span>
-            <span style={s.iBtn}>▼</span>
-          </div>
-        </div>
-
-        <div style={s.searchBox}>
-          <input
-            id="layer-search"
-            style={s.search}
-            placeholder="Search layers..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
-
-        <div style={s.list}>
-          {filtered.map((l) => (
-            <div key={l.id} style={s.row} onClick={() => toggle(l.id)}>
-              <div
-                style={{
-                  ...s.cb,
-                  background: states[l.id] ? "#1a3a5c" : "transparent",
-                  borderColor: states[l.id] ? "#2a6aac" : "#2a3038",
-                }}
-              >
-                {states[l.id] && (
-                  <svg width="9" height="7" viewBox="0 0 9 7" fill="none">
-                    <path
-                      d="M1 3.5L3.5 6L8 1"
-                      stroke="#4ab8e8"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                )}
-              </div>
-              <span style={{ ...s.lIcon, color: l.color }}>{l.icon}</span>
-              <span style={s.lLabel}>{l.label}</span>
-            </div>
-          ))}
-        </div>
-
-        <div style={s.pFoot}>
-          <span style={s.credit}>
-            © <span style={{ color: "#4ab8e8" }}>Elie Habib</span> · Someone™
-          </span>
-        </div>
-      </div>
-
-      {/* ── MAP ── */}
-      <div ref={mapRef} style={s.map} />
-
-      {/* ── ZOOM ── */}
-      <div style={s.zoom}>
-        <button style={s.zBtn} onClick={() => mapObj.current?.zoomIn()}>
-          +
-        </button>
-        <button style={s.zBtn} onClick={() => mapObj.current?.zoomOut()}>
-          −
-        </button>
-        <button
-          style={{ ...s.zBtn, marginTop: 4 }}
-          onClick={() => mapObj.current?.setView([20, 20], 2)}
-        >
-          ⌂
-        </button>
-      </div>
-
-      <button style={s.legend}>LEGEND</button>
-      <div style={s.webgl}>WEBGL</div>
+     
 
       <Group orientation="horizontal" style={{ width: "100%", height: "100%" }}>
         
@@ -395,11 +324,17 @@ export default function WorldMap() {
         </Panel>
 
         {/* ── RESIZE HANDLE ── */}
-        <Separator /> 
+       <Separator
+  style={{
+    width: "6px",
+    background: "#1a1e22",
+    cursor: "col-resize",
+  }}
+/>
 
         {/* ── MAP PANEL ── */}
         <Panel defaultSize={75}>
-          <div ref={mapRef} style={s.map} />
+         <div ref={mapRef} style={s.map} />
         </Panel>
 
       </Group>
@@ -408,28 +343,23 @@ export default function WorldMap() {
 }
 
 const s = {
-  root: {
-    flex: 1,
-    position: "relative",
-    overflow: "hidden",
-    background: "#080c10",
-    border: "1px solid #1a1e22",
-    borderRadius: "8px",
-    display: "flex",
-  },
+root: {
+  width: "100%",
+  height: "100%",
+  position: "relative",
+  overflow: "hidden",
+  background: "#080c10",
+  border: "1px solid #1a1e22",
+  borderRadius: "8px",
+},
   panel: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    width: "210px",
-    height: "100%",
-    background: "rgba(10,12,14,0.93)",
-    borderRight: "1px solid #1e2428",
-    zIndex: 1000,
-    display: "flex",
-    flexDirection: "column",
-    backdropFilter: "blur(6px)",
-  },
+  height: "100%",
+  background: "rgba(10,12,14,0.93)",
+  borderRight: "1px solid #1e2428",
+  display: "flex",
+  flexDirection: "column",
+  backdropFilter: "blur(6px)",
+},
   pHead: {
     display: "flex",
     alignItems: "center",
