@@ -12,64 +12,25 @@ import {
 export default function Dashboard() {
   return (
     <main style={styles.main}>
-      <Group orientation="horizontal" style={styles.group}>
-        {/* Sidebar */}
-        <Panel
-          defaultSize={20}
-          minSize={15}
-          style={styles.panel}
-        >
-          <Sidebar />
-        </Panel>
+      {/* Left column – Intelligence Feed */}
+      <div style={styles.leftCol}>
+        <Sidebar />
+      </div>
 
-        <Separator style={styles.separatorVertical} />
+      {/* Right column */}
+      <div style={styles.rightCol}>
+        {/* Top – World Map */}
+        <div style={styles.mapRow}>
+          <WorldMap />
+        </div>
 
-        {/* Right Side */}
-        <Panel
-          defaultSize={80}
-          style={styles.panel}
-        >
-          <Group orientation="vertical" style={styles.group}>
-            {/* World Map */}
-            <Panel
-              defaultSize={50}
-              minSize={25}
-              style={styles.panel}
-            >
-              <WorldMap />
-            </Panel>
-
-            <Separator style={styles.separatorHorizontal} />
-
-            {/* Bottom Row */}
-            <Panel
-              defaultSize={50}
-              minSize={25}
-              style={styles.panel}
-            >
-              <Group orientation="horizontal" style={styles.group}>
-                <Panel
-                  defaultSize={50}
-                  minSize={25}
-                  style={styles.panel}
-                >
-                  <IndiaPanel />
-                </Panel>
-
-                <Separator style={styles.separatorVertical} />
-
-                <Panel
-                  defaultSize={50}
-                  minSize={25}
-                  style={styles.panel}
-                >
-                  <AIConsole />
-                </Panel>
-              </Group>
-            </Panel>
-          </Group>
-        </Panel>
-      </Group>
+        {/* Bottom row – India Analytics + AI Console */}
+        <div style={styles.bottomRow}>
+          <IndiaPanel />
+          <AIConsole />
+        </div>
+        
+      </div>
     </main>
   );
 }
