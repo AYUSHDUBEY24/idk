@@ -115,6 +115,9 @@ export default function IndiaPanel() {
     });
 
     mapObj.current = map;
+    setTimeout(() => {
+  map.invalidateSize();
+}, 200);
     return () => { map.remove(); mapObj.current = null; };
   }, []);
 
@@ -301,8 +304,8 @@ const s = {
     minHeight: 0,
   },
   panel: {
-    width: "160px",
-    minWidth: "160px",
+    width: "100%",
+minWidth: 0,
     background: "rgba(10,12,14,0.95)",
     borderRight: "1px solid #1e2428",
     display: "flex",

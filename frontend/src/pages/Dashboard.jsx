@@ -3,6 +3,12 @@ import WorldMap from "../components/WorldMap";
 import IndiaPanel from "../components/IndiaPanel";
 import AIConsole from "../components/AIConsole";
 
+import {
+  Group,
+  Panel,
+  Separator,
+} from "react-resizable-panels";
+
 export default function Dashboard() {
   return (
     <main style={styles.main}>
@@ -31,34 +37,33 @@ export default function Dashboard() {
 
 const styles = {
   main: {
-    display: "flex",
-    gap: "12px",
+    height: "100%",
     padding: "12px",
-    flex: 1,
     overflow: "hidden",
+    display: "flex",
+  },
+
+  group: {
+    width: "100%",
     height: "100%",
   },
-  leftCol: {
+
+  panel: {
     display: "flex",
-    flexDirection: "column",
-  },
-  rightCol: {
-    flex: 1,
-    display: "flex",
-    flexDirection: "column",
-    gap: "12px",
     minWidth: 0,
+    minHeight: 0,
     overflow: "hidden",
   },
-  mapRow: {
-    flex: "0 0 46%",
-    display: "flex",
-    minHeight: 0,
+
+  separatorVertical: {
+    width: "6px",
+    background: "#1a1e22",
+    cursor: "col-resize",
   },
-  bottomRow: {
-    flex: 1,
-    display: "flex",
-    gap: "12px",
-    minHeight: 0,
+
+  separatorHorizontal: {
+    height: "6px",
+    background: "#1a1e22",
+    cursor: "row-resize",
   },
 };

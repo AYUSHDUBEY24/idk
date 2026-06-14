@@ -1,4 +1,9 @@
 import { useEffect, useRef, useState } from "react";
+import {
+  Group,
+  Panel,
+  Separator,
+} from "react-resizable-panels";
 
 const LAYERS_DATA = [
   {
@@ -343,6 +348,61 @@ export default function WorldMap() {
 
       <button style={s.legend}>LEGEND</button>
       <div style={s.webgl}>WEBGL</div>
+
+      <Group orientation="horizontal" style={{ width: "100%", height: "100%" }}>
+        
+        {/* ── LAYERS PANEL ── */}
+        <Panel defaultSize={25} minSize={15}>
+          <div style={s.panel}>
+            <div style={s.pHead}>
+              <span style={s.pTitle}>LAYERS</span>
+              <div style={s.pIcons}>
+                <span style={s.iBtn}>?</span>
+                <span style={s.iBtn}>▼</span>
+              </div>
+            </div>
+
+            <div style={s.searchBox}>
+              <input
+                id="layer-search"
+                style={s.search}
+                placeholder="Search layers..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+
+            <div style={s.list}>
+              {filtered.map((l) => (
+                <div key={l.id} style={s.row} onClick={() => toggle(l.id)}>
+                  <div style={{ ...s.cb, background: states[l.id] ? "#1a3a5c" : "transparent", borderColor: states[l.id] ? "#2a6aac" : "#2a3038" }}>
+                    {states[l.id] && (
+                      <svg width="9" height="7" viewBox="0 0 9 7" fill="none">
+                        <path d="M1 3.5L3.5 6L8 1" stroke="#4ab8e8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    )}
+                  </div>
+                  <span style={{ ...s.lIcon, color: l.color }}>{l.icon}</span>
+                  <span style={s.lLabel}>{l.label}</span>
+                </div>
+              ))}
+            </div>
+
+            <div style={s.pFoot}>
+              <span style={s.credit}>© <span style={{ color: "#4ab8e8" }}>Elie Habib</span> · Someone™</span>
+            </div>
+          </div>
+        </Panel>
+
+        {/* ── RESIZE HANDLE ── */}
+        <Separator /> 
+
+        {/* ── MAP PANEL ── */}
+        <Panel defaultSize={75}>
+          <div ref={mapRef} style={s.map} />
+        </Panel>
+
+      </Group>
     </div>
   );
 }

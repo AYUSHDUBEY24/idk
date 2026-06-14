@@ -161,7 +161,7 @@ const styles = {
     borderRadius: "8px",
     display: "flex",
     flexDirection: "column",
-    minWidth: "260px",
+    minWidth: 0,
   },
   header: {
     display: "flex",
