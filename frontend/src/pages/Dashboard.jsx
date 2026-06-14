@@ -3,61 +3,106 @@ import WorldMap from "../components/WorldMap";
 import IndiaPanel from "../components/IndiaPanel";
 import AIConsole from "../components/AIConsole";
 
+import {
+  Group,
+  Panel,
+  Separator,
+} from "react-resizable-panels";
+
 export default function Dashboard() {
   return (
     <main style={styles.main}>
-      {/* Left column – Intelligence Feed */}
-      <div style={styles.leftCol}>
-        <Sidebar />
-      </div>
+      <Group orientation="horizontal" style={styles.group}>
+        {/* Sidebar */}
+        <Panel
+          defaultSize={20}
+          minSize={15}
+          style={styles.panel}
+        >
+          <Sidebar />
+        </Panel>
 
-      {/* Right column */}
-      <div style={styles.rightCol}>
-        {/* Top – World Map */}
-        <div style={styles.mapRow}>
-          <WorldMap />
-        </div>
+        <Separator style={styles.separatorVertical} />
 
-        {/* Bottom row – India Analytics + AI Console */}
-        <div style={styles.bottomRow}>
-          <IndiaPanel />
-          <AIConsole />
-        </div>
-      </div>
+        {/* Right Side */}
+        <Panel
+          defaultSize={80}
+          style={styles.panel}
+        >
+          <Group orientation="vertical" style={styles.group}>
+            {/* World Map */}
+            <Panel
+              defaultSize={50}
+              minSize={25}
+              style={styles.panel}
+            >
+              <WorldMap />
+            </Panel>
+
+            <Separator style={styles.separatorHorizontal} />
+
+            {/* Bottom Row */}
+            <Panel
+              defaultSize={50}
+              minSize={25}
+              style={styles.panel}
+            >
+              <Group orientation="horizontal" style={styles.group}>
+                <Panel
+                  defaultSize={50}
+                  minSize={25}
+                  style={styles.panel}
+                >
+                  <IndiaPanel />
+                </Panel>
+
+                <Separator style={styles.separatorVertical} />
+
+                <Panel
+                  defaultSize={50}
+                  minSize={25}
+                  style={styles.panel}
+                >
+                  <AIConsole />
+                </Panel>
+              </Group>
+            </Panel>
+          </Group>
+        </Panel>
+      </Group>
     </main>
   );
 }
 
 const styles = {
   main: {
-    display: "flex",
-    gap: "12px",
+    height: "100%",
     padding: "12px",
-    flex: 1,
     overflow: "hidden",
+    display: "flex",
+  },
+
+  group: {
+    width: "100%",
     height: "100%",
   },
-  leftCol: {
+
+  panel: {
     display: "flex",
-    flexDirection: "column",
-  },
-  rightCol: {
-    flex: 1,
-    display: "flex",
-    flexDirection: "column",
-    gap: "12px",
     minWidth: 0,
+    minHeight: 0,
     overflow: "hidden",
   },
-  mapRow: {
-    flex: "0 0 46%",
-    display: "flex",
-    minHeight: 0,
+
+  separatorVertical: {
+    width: "6px",
+    background: "#1a1e22",
+    cursor: "col-resize",
   },
-  bottomRow: {
-    flex: 1,
-    display: "flex",
-    gap: "12px",
-    minHeight: 0,
+
+  separatorHorizontal: {
+    height: "6px",
+    background: "#1a1e22",
+    cursor: "row-resize",
   },
 };

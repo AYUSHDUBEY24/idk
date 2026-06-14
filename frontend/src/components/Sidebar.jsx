@@ -100,8 +100,9 @@ export default function Sidebar() {
 
 const styles = {
   sidebar: {
-    width: "280px",
-    minWidth: "280px",
+    width: "100%",
+    height: "100%",
+    minWidth: 0,
     background: "#0f1214",
     border: "1px solid #1a1e22",
     borderRadius: "8px",
@@ -109,6 +110,7 @@ const styles = {
     flexDirection: "column",
     overflow: "hidden",
   },
+
   header: {
     padding: "20px 20px 16px",
     borderBottom: "1px solid #1a1e22",
@@ -116,6 +118,7 @@ const styles = {
     justifyContent: "space-between",
     alignItems: "flex-start",
   },
+
   title: {
     fontFamily: "'Orbitron', monospace",
     fontSize: "20px",
@@ -124,6 +127,7 @@ const styles = {
     lineHeight: 1.2,
     marginBottom: "6px",
   },
+
   subtitle: {
     fontFamily: "'Rajdhani', sans-serif",
     fontSize: "12px",
@@ -131,6 +135,7 @@ const styles = {
     letterSpacing: "0.5px",
     textTransform: "uppercase",
   },
+
   hubId: {
     background: "#1a1612",
     border: "1px solid #2a2218",
@@ -138,6 +143,7 @@ const styles = {
     padding: "6px 10px",
     textAlign: "center",
   },
+
   hubLabel: {
     display: "block",
     fontFamily: "'Share Tech Mono', monospace",
@@ -145,6 +151,7 @@ const styles = {
     color: "#6a6865",
     letterSpacing: "1px",
   },
+
   hubValue: {
     display: "block",
     fontFamily: "'Share Tech Mono', monospace",
@@ -152,59 +159,77 @@ const styles = {
     color: "#c8922a",
     letterSpacing: "1px",
   },
+
   feedList: {
     flex: 1,
     padding: "12px 0",
     overflowY: "auto",
   },
+
   feedItem: {
     display: "flex",
     gap: "12px",
     padding: "12px 20px",
     borderBottom: "1px solid #13161a",
     transition: "background 0.2s",
+    alignItems: "flex-start",
   },
+
   feedAccent: {
     width: "2px",
     minWidth: "2px",
     borderRadius: "2px",
     alignSelf: "stretch",
   },
+
   feedContent: {
     flex: 1,
+    minWidth: 0,
   },
+
   feedMeta: {
     display: "flex",
     alignItems: "center",
     gap: "8px",
     marginBottom: "4px",
+    flexWrap: "nowrap",
   },
+
   feedTime: {
     fontFamily: "'Share Tech Mono', monospace",
     fontSize: "11px",
     color: "#6a6865",
     letterSpacing: "0.5px",
+    whiteSpace: "nowrap",
   },
+
   activeDot: {
     color: "#3ddc84",
     fontSize: "10px",
     transition: "opacity 0.3s",
   },
+
   warnIcon: {
     color: "#e07a3a",
     fontSize: "11px",
   },
+
   feedText: {
     fontFamily: "'Rajdhani', sans-serif",
     fontSize: "14px",
     color: "#c0bbb4",
     lineHeight: 1.4,
     fontWeight: 500,
+    whiteSpace: "normal",
+    overflowWrap: "break-word",
+    wordBreak: "normal",
   },
+
   footer: {
     padding: "16px 20px",
     borderTop: "1px solid #1a1e22",
   },
+
   protocolBtn: {
     width: "100%",
     padding: "12px",

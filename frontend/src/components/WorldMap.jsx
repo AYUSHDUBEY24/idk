@@ -1,4 +1,9 @@
 import { useEffect, useRef, useState } from "react";
+import {
+  Group,
+  Panel,
+  Separator,
+} from "react-resizable-panels";
 
 const LAYERS_DATA = [
   { id: "pipelines",  icon: "⬡", label: "PIPELINES",             color: "#e07a3a" },
@@ -87,11 +92,11 @@ function markerHtml(color, pulse) {
 }
 
 export default function WorldMap() {
-  const mapRef   = useRef(null);
-  const mapObj   = useRef(null);
-  const groups   = useRef({});
-  const [search, setSearch]       = useState("");
-  const [states, setStates]       = useState(() => {
+  const mapRef = useRef(null);
+  const mapObj = useRef(null);
+  const groups = useRef({});
+  const [search, setSearch] = useState("");
+  const [states, setStates] = useState(() => {
     const s = {};
     LAYERS_DATA.forEach((l) => (s[l.id] = !!l.defaultOn));
     return s;
@@ -133,6 +138,9 @@ export default function WorldMap() {
     });
 
     mapObj.current = map;
+    setTimeout(() => {
+      map.invalidateSize();
+    }, 200);
     return () => { map.remove(); mapObj.current = null; };
   }, []);
 
@@ -160,51 +168,7 @@ export default function WorldMap() {
         #layer-search::placeholder { color:#3a3835; }
       `}</style>
 
-      {/* ── LAYERS PANEL ── */}
-      <div style={s.panel}>
-        <div style={s.pHead}>
-          <span style={s.pTitle}>LAYERS</span>
-          <div style={s.pIcons}>
-            <span style={s.iBtn}>?</span>
-            <span style={s.iBtn}>▼</span>
-          </div>
-        </div>
-
-        <div style={s.searchBox}>
-          <input
-            id="layer-search"
-            style={s.search}
-            placeholder="Search layers..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
-
-        <div style={s.list}>
-          {filtered.map((l) => (
-            <div key={l.id} style={s.row} onClick={() => toggle(l.id)}>
-              <div style={{ ...s.cb, background: states[l.id] ? "#1a3a5c" : "transparent", borderColor: states[l.id] ? "#2a6aac" : "#2a3038" }}>
-                {states[l.id] && (
-                  <svg width="9" height="7" viewBox="0 0 9 7" fill="none">
-                    <path d="M1 3.5L3.5 6L8 1" stroke="#4ab8e8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                )}
-              </div>
-              <span style={{ ...s.lIcon, color: l.color }}>{l.icon}</span>
-              <span style={s.lLabel}>{l.label}</span>
-            </div>
-          ))}
-        </div>
-
-        <div style={s.pFoot}>
-          <span style={s.credit}>© <span style={{ color: "#4ab8e8" }}>Elie Habib</span> · Someone™</span>
-        </div>
-      </div>
-
-      {/* ── MAP ── */}
-      <div ref={mapRef} style={s.map} />
-
-      {/* ── ZOOM ── */}
+      {/* ── OVERLAYS ── */}
       <div style={s.zoom}>
         <button style={s.zBtn} onClick={() => mapObj.current?.zoomIn()}>+</button>
         <button style={s.zBtn} onClick={() => mapObj.current?.zoomOut()}>−</button>
@@ -213,13 +177,76 @@ export default function WorldMap() {
 
       <button style={s.legend}>LEGEND</button>
       <div style={s.webgl}>WEBGL</div>
+
+      <Group orientation="horizontal" style={{ width: "100%", height: "100%" }}>
+        
+        {/* ── LAYERS PANEL ── */}
+        <Panel defaultSize={25} minSize={15}>
+          <div style={s.panel}>
+            <div style={s.pHead}>
+              <span style={s.pTitle}>LAYERS</span>
+              <div style={s.pIcons}>
+                <span style={s.iBtn}>?</span>
+                <span style={s.iBtn}>▼</span>
+              </div>
+            </div>
+
+            <div style={s.searchBox}>
+              <input
+                id="layer-search"
+                style={s.search}
+                placeholder="Search layers..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+
+            <div style={s.list}>
+              {filtered.map((l) => (
+                <div key={l.id} style={s.row} onClick={() => toggle(l.id)}>
+                  <div style={{ ...s.cb, background: states[l.id] ? "#1a3a5c" : "transparent", borderColor: states[l.id] ? "#2a6aac" : "#2a3038" }}>
+                    {states[l.id] && (
+                      <svg width="9" height="7" viewBox="0 0 9 7" fill="none">
+                        <path d="M1 3.5L3.5 6L8 1" stroke="#4ab8e8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    )}
+                  </div>
+                  <span style={{ ...s.lIcon, color: l.color }}>{l.icon}</span>
+                  <span style={s.lLabel}>{l.label}</span>
+                </div>
+              ))}
+            </div>
+
+            <div style={s.pFoot}>
+              <span style={s.credit}>© <span style={{ color: "#4ab8e8" }}>Elie Habib</span> · Someone™</span>
+            </div>
+          </div>
+        </Panel>
+
+        {/* ── RESIZE HANDLE ── */}
+        <Separator /> 
+
+        {/* ── MAP PANEL ── */}
+        <Panel defaultSize={75}>
+          <div ref={mapRef} style={s.map} />
+        </Panel>
+
+      </Group>
     </div>
   );
 }
 
 const s = {
   root: { flex: 1, position: "relative", overflow: "hidden", background: "#080c10", border: "1px solid #1a1e22", borderRadius: "8px", display: "flex" },
-  panel: { position: "absolute", top: 0, left: 0, width: "210px", height: "100%", background: "rgba(10,12,14,0.93)", borderRight: "1px solid #1e2428", zIndex: 1000, display: "flex", flexDirection: "column", backdropFilter: "blur(6px)" },
+  panel: {
+    width: "100%",
+    height: "100%",
+    background: "rgba(10,12,14,0.93)",
+    borderRight: "1px solid #1e2428",
+    display: "flex",
+    flexDirection: "column",
+    backdropFilter: "blur(6px)",
+  },
   pHead: { display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 12px", borderBottom: "1px solid #1e2428" },
   pTitle: { fontFamily: "'Share Tech Mono',monospace", fontSize: "12px", color: "#8a8880", letterSpacing: "2px" },
   pIcons: { display: "flex", gap: "5px" },
