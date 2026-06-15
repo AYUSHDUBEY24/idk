@@ -114,11 +114,26 @@ export default function IndiaPanel() {
       if (layer.defaultOn) group.addTo(map);
     });
 
-    mapObj.current = map;
-    setTimeout(() => {
+   mapObj.current = map;
+
+setTimeout(() => {
   map.invalidateSize();
 }, 200);
-    return () => { map.remove(); mapObj.current = null; };
+
+const resizeObserver = new ResizeObserver(() => {
+  setTimeout(() => {
+    map.invalidateSize();
+  }, 50);
+});
+
+resizeObserver.observe(mapRef.current);
+
+return () => {
+  resizeObserver.disconnect();
+  map.remove();
+  mapObj.current = null;
+};
+
   }, []);
 
   // Sync layer visibility
