@@ -303,15 +303,15 @@ const s = {
     overflow: "hidden",
     minHeight: 0,
   },
-  panel: {
-    width: "100%",
-minWidth: 0,
+ panel: {
+    width: "220px",
+    minWidth: "220px",
     background: "rgba(10,12,14,0.95)",
     borderRight: "1px solid #1e2428",
     display: "flex",
     flexDirection: "column",
     zIndex: 10,
-  },
+},
   pHead: {
     display: "flex",
     alignItems: "center",
