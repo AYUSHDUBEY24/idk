@@ -152,6 +152,7 @@ export default function WorldMap() {
   map.invalidateSize();
 }, 300);
 
+
     L.tileLayer(
       "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
       {
@@ -182,12 +183,22 @@ export default function WorldMap() {
     const intelGroup = L.layerGroup();
     groups.current["intel_nodes"] = intelGroup;
     if (true) intelGroup.addTo(map); // default on
-    mapObj.current = map;
-    return () => {
-      map.remove();
-      mapObj.current = null;
-    };
-  }, []);
+   mapObj.current = map;
+
+const resizeObserver = new ResizeObserver(() => {
+  setTimeout(() => {
+    map.invalidateSize();
+  }, 50);
+});
+
+resizeObserver.observe(mapRef.current);
+
+return () => {
+  resizeObserver.disconnect();
+  map.remove();
+  mapObj.current = null;
+};
+}, []);
  useEffect(() => {
   fetch("http://localhost:8000/api/graph/entities?limit=30")
     .then((r) => r.json())

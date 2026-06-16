@@ -114,11 +114,26 @@ export default function IndiaPanel() {
       if (layer.defaultOn) group.addTo(map);
     });
 
-    mapObj.current = map;
-    setTimeout(() => {
+   mapObj.current = map;
+
+setTimeout(() => {
   map.invalidateSize();
 }, 200);
-    return () => { map.remove(); mapObj.current = null; };
+
+const resizeObserver = new ResizeObserver(() => {
+  setTimeout(() => {
+    map.invalidateSize();
+  }, 50);
+});
+
+resizeObserver.observe(mapRef.current);
+
+return () => {
+  resizeObserver.disconnect();
+  map.remove();
+  mapObj.current = null;
+};
+
   }, []);
 
   // Sync layer visibility
@@ -303,15 +318,15 @@ const s = {
     overflow: "hidden",
     minHeight: 0,
   },
-  panel: {
-    width: "100%",
-minWidth: 0,
+ panel: {
+    width: "220px",
+    minWidth: "220px",
     background: "rgba(10,12,14,0.95)",
     borderRight: "1px solid #1e2428",
     display: "flex",
     flexDirection: "column",
     zIndex: 10,
-  },
+},
   pHead: {
     display: "flex",
     alignItems: "center",
