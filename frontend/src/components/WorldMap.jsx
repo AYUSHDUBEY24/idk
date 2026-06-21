@@ -1,9 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import {
-  Group,
-  Panel,
-  Separator,
-} from "react-resizable-panels";
+import { Group, Panel, Separator } from "react-resizable-panels";
 
 const LAYERS_DATA = [
   {
@@ -30,6 +26,25 @@ const LAYERS_DATA = [
   { id: "protests", icon: "⚑", label: "PROTESTS", color: "#e0a83a" },
   { id: "armed", icon: "⚑", label: "ARMED CONFLICT EVENTS", color: "#e05252" },
 ];
+const DOMAIN_LAYER_MAP = {
+  ALL: [
+    "intel_nodes",
+    "military",
+    "pipelines",
+    "protests",
+    "armed",
+    "ai",
+    "fuel",
+    "aviation",
+    "storage",
+    "ships",
+    "trade",
+  ],
+  GEO: ["intel_nodes", "armed", "protests"],
+  DEFENSE: ["intel_nodes", "military", "ships", "pipelines"],
+  TECH: ["intel_nodes", "ai", "aviation"],
+  CLIMATE: ["intel_nodes", "fuel"],
+};
 const COUNTRY_COORDS = {
   Iran: [32.4, 53.7],
   India: [20.6, 78.9],
@@ -123,7 +138,7 @@ function markerHtml(color, pulse) {
   return `<div style="width:9px;height:9px;border-radius:50%;background:${color};box-shadow:0 0 6px ${color};border:1px solid rgba(255,255,255,0.25);"></div>`;
 }
 
-export default function WorldMap() {
+export default function WorldMap({ activeDomain = "ALL" }) {
   const mapRef = useRef(null);
   const mapObj = useRef(null);
   const groups = useRef({});
@@ -134,7 +149,17 @@ export default function WorldMap() {
     LAYERS_DATA.forEach((l) => (s[l.id] = !!l.defaultOn));
     return s;
   });
-
+  useEffect(() => {
+    const activeLayerIds =
+      DOMAIN_LAYER_MAP[activeDomain] || DOMAIN_LAYER_MAP.ALL;
+    setStates((prev) => {
+      const next = {};
+      LAYERS_DATA.forEach((l) => {
+        next[l.id] = activeLayerIds.includes(l.id);
+      });
+      return next;
+    });
+  }, [activeDomain]);
   useEffect(() => {
     if (mapObj.current || !mapRef.current) return;
     const L = window.L;
@@ -149,9 +174,8 @@ export default function WorldMap() {
       attributionControl: false,
     });
     setTimeout(() => {
-  map.invalidateSize();
-}, 300);
-
+      map.invalidateSize();
+    }, 300);
 
     L.tileLayer(
       "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
@@ -183,28 +207,28 @@ export default function WorldMap() {
     const intelGroup = L.layerGroup();
     groups.current["intel_nodes"] = intelGroup;
     if (true) intelGroup.addTo(map); // default on
-   mapObj.current = map;
+    mapObj.current = map;
 
-const resizeObserver = new ResizeObserver(() => {
-  setTimeout(() => {
-    map.invalidateSize();
-  }, 50);
-});
+    const resizeObserver = new ResizeObserver(() => {
+      setTimeout(() => {
+        map.invalidateSize();
+      }, 50);
+    });
 
-resizeObserver.observe(mapRef.current);
+    resizeObserver.observe(mapRef.current);
 
-return () => {
-  resizeObserver.disconnect();
-  map.remove();
-  mapObj.current = null;
-};
-}, []);
- useEffect(() => {
-  fetch("http://localhost:8000/api/graph/entities?limit=30")
-    .then((r) => r.json())
-    .then((data) => setIntelEntities(data))
-    .catch(() => {});
-}, []);
+    return () => {
+      resizeObserver.disconnect();
+      map.remove();
+      mapObj.current = null;
+    };
+  }, []);
+  useEffect(() => {
+    fetch("http://localhost:8000/api/graph/entities?limit=30")
+      .then((r) => r.json())
+      .then((data) => setIntelEntities(data))
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     const map = mapObj.current;
@@ -287,10 +311,7 @@ return () => {
         #layer-search::placeholder { color:#3a3835; }
       `}</style>
 
-     
-
       <Group orientation="horizontal" style={{ width: "100%", height: "100%" }}>
-        
         {/* ── LAYERS PANEL ── */}
         <Panel defaultSize={25} minSize={15}>
           <div style={s.panel}>
@@ -315,10 +336,22 @@ return () => {
             <div style={s.list}>
               {filtered.map((l) => (
                 <div key={l.id} style={s.row} onClick={() => toggle(l.id)}>
-                  <div style={{ ...s.cb, background: states[l.id] ? "#1a3a5c" : "transparent", borderColor: states[l.id] ? "#2a6aac" : "#2a3038" }}>
+                  <div
+                    style={{
+                      ...s.cb,
+                      background: states[l.id] ? "#1a3a5c" : "transparent",
+                      borderColor: states[l.id] ? "#2a6aac" : "#2a3038",
+                    }}
+                  >
                     {states[l.id] && (
                       <svg width="9" height="7" viewBox="0 0 9 7" fill="none">
-                        <path d="M1 3.5L3.5 6L8 1" stroke="#4ab8e8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path
+                          d="M1 3.5L3.5 6L8 1"
+                          stroke="#4ab8e8"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
                       </svg>
                     )}
                   </div>
@@ -329,48 +362,50 @@ return () => {
             </div>
 
             <div style={s.pFoot}>
-              <span style={s.credit}>© <span style={{ color: "#4ab8e8" }}>Elie Habib</span> · Someone™</span>
+              <span style={s.credit}>
+                © <span style={{ color: "#4ab8e8" }}>Elie Habib</span> ·
+                Someone™
+              </span>
             </div>
           </div>
         </Panel>
 
         {/* ── RESIZE HANDLE ── */}
-       <Separator
-  style={{
-    width: "6px",
-    background: "#1a1e22",
-    cursor: "col-resize",
-  }}
-/>
+        <Separator
+          style={{
+            width: "6px",
+            background: "#1a1e22",
+            cursor: "col-resize",
+          }}
+        />
 
         {/* ── MAP PANEL ── */}
         <Panel defaultSize={75}>
-         <div ref={mapRef} style={s.map} />
+          <div ref={mapRef} style={s.map} />
         </Panel>
-
       </Group>
     </div>
   );
 }
 
 const s = {
-root: {
-  width: "100%",
-  height: "100%",
-  position: "relative",
-  overflow: "hidden",
-  background: "#080c10",
-  border: "1px solid #1a1e22",
-  borderRadius: "8px",
-},
+  root: {
+    width: "100%",
+    height: "100%",
+    position: "relative",
+    overflow: "hidden",
+    background: "#080c10",
+    border: "1px solid #1a1e22",
+    borderRadius: "8px",
+  },
   panel: {
-  height: "100%",
-  background: "rgba(10,12,14,0.93)",
-  borderRight: "1px solid #1e2428",
-  display: "flex",
-  flexDirection: "column",
-  backdropFilter: "blur(6px)",
-},
+    height: "100%",
+    background: "rgba(10,12,14,0.93)",
+    borderRight: "1px solid #1e2428",
+    display: "flex",
+    flexDirection: "column",
+    backdropFilter: "blur(6px)",
+  },
   pHead: {
     display: "flex",
     alignItems: "center",

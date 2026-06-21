@@ -1,14 +1,17 @@
+import { useState } from "react";
 import "./styles/globals.css";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import Dashboard from "./pages/Dashboard";
 
 export default function App() {
+  const [activeDomain, setActiveDomain] = useState("ALL");
+
   return (
     <div style={styles.app}>
-      <Navbar />
+      <Navbar activeDomain={activeDomain} setActiveDomain={setActiveDomain} />
       <div style={styles.body}>
-        <Dashboard />
+        <Dashboard activeDomain={activeDomain} />
       </div>
       <Footer />
     </div>

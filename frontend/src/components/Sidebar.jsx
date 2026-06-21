@@ -2,7 +2,22 @@ import { useState, useEffect } from "react";
 
 const API = "http://localhost:8000/api";
 
-export default function Sidebar() {
+// Keyword mapping for each domain
+const DOMAIN_KEYWORDS = {
+  GEO: ["border", "diplomat", "treaty", "summit", "minister", "election", "embassy", "foreign", "relations", "talks", "visit", "bilateral"],
+  DEFENSE: ["military", "army", "navy", "air force", "missile", "weapon", "defence", "defense", "troops", "war", "attack", "strike", "conflict"],
+  TECH: ["ai", "artificial intelligence", "semiconductor", "cyber", "data center", "technology", "startup", "chip", "satellite", "isro", "digital"],
+  CLIMATE: ["flood", "drought", "emission", "disaster", "climate", "earthquake", "cyclone", "weather", "environment", "pollution"],
+};
+
+function matchesDomain(article, domain) {
+  if (domain === "ALL") return true;
+  const keywords = DOMAIN_KEYWORDS[domain] || [];
+  const text = `${article.title}`.toLowerCase();
+  return keywords.some((kw) => text.includes(kw));
+}
+
+export default function Sidebar({ activeDomain = "ALL" }) {
   const [blinking, setBlinking] = useState(true);
   const [articles, setArticles] = useState([]);
   const [stats, setStats] = useState(null);
@@ -19,7 +34,7 @@ export default function Sidebar() {
     async function fetchData() {
       try {
         const [articlesRes, statsRes] = await Promise.all([
-          fetch(`${API}/articles?limit=10`),
+          fetch(`${API}/articles?limit=50`),
           fetch(`${API}/stats`),
         ]);
         const articlesData = await articlesRes.json();
@@ -39,6 +54,11 @@ export default function Sidebar() {
     const interval = setInterval(fetchData, 5 * 60 * 1000);
     return () => clearInterval(interval);
   }, []);
+
+  // Filter articles by active domain
+  const filteredArticles = articles
+    .filter((article) => matchesDomain(article, activeDomain))
+    .slice(0, 10);
 
   function formatTime(dateStr) {
     if (!dateStr) return "—";
@@ -91,7 +111,9 @@ export default function Sidebar() {
             <br />
             Feed
           </h2>
-          <p style={styles.subtitle}>Current Live Updates</p>
+          <p style={styles.subtitle}>
+            {activeDomain === "ALL" ? "Current Live Updates" : `${activeDomain} Updates`}
+          </p>
         </div>
         <div style={styles.hubId}>
           <span style={styles.hubLabel}>HUB-ID:</span>
@@ -114,9 +136,9 @@ export default function Sidebar() {
           <div style={styles.statDivider} />
           <div style={styles.statItem}>
             <span style={styles.statNumber}>
-              {stats.by_source?.length || 0}
+              {filteredArticles.length}
             </span>
-            <span style={styles.statLabel}>SOURCES</span>
+            <span style={styles.statLabel}>SHOWING</span>
           </div>
         </div>
       )}
@@ -125,10 +147,12 @@ export default function Sidebar() {
       <div style={styles.feedList}>
         {loading ? (
           <div style={styles.loadingText}>LOADING FEED...</div>
-        ) : articles.length === 0 ? (
-          <div style={styles.loadingText}>NO ARTICLES FOUND</div>
+        ) : filteredArticles.length === 0 ? (
+          <div style={styles.loadingText}>
+            NO {activeDomain !== "ALL" ? activeDomain : ""} ARTICLES FOUND
+          </div>
         ) : (
-          articles.map((article, index) => {
+          filteredArticles.map((article, index) => {
             const status = getStatus(index);
             return (
               <div

@@ -12,17 +12,18 @@ def init_db():
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("""
-        CREATE TABLE IF NOT EXISTS articles (
-            id           INTEGER PRIMARY KEY AUTOINCREMENT,
-            url          TEXT UNIQUE,
-            fingerprint  TEXT UNIQUE,
-            title        TEXT,
-            body         TEXT,
-            source       TEXT,
-            published_at TEXT,
-            ingested_at  TEXT DEFAULT (datetime('now')),
-            is_processed INTEGER DEFAULT 0
-        )
+                   CREATE TABLE IF NOT EXISTS articles (
+                   id           INTEGER PRIMARY KEY AUTOINCREMENT,
+                   url          TEXT UNIQUE,
+                   fingerprint  TEXT UNIQUE,
+                   title        TEXT,
+                   body         TEXT,
+                   source       TEXT,
+                   domain       TEXT DEFAULT 'GEO',
+                   published_at TEXT,
+                   ingested_at  TEXT DEFAULT (datetime('now')),
+                   is_processed INTEGER DEFAULT 0
+                   )
     """)
     conn.commit()
     conn.close()
