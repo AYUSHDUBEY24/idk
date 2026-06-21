@@ -2,21 +2,6 @@ import { useState, useEffect } from "react";
 
 const API = "http://localhost:8000/api";
 
-// Keyword mapping for each domain
-const DOMAIN_KEYWORDS = {
-  GEO: ["border", "diplomat", "treaty", "summit", "minister", "election", "embassy", "foreign", "relations", "talks", "visit", "bilateral"],
-  DEFENSE: ["military", "army", "navy", "air force", "missile", "weapon", "defence", "defense", "troops", "war", "attack", "strike", "conflict"],
-  TECH: ["ai", "artificial intelligence", "semiconductor", "cyber", "data center", "technology", "startup", "chip", "satellite", "isro", "digital"],
-  CLIMATE: ["flood", "drought", "emission", "disaster", "climate", "earthquake", "cyclone", "weather", "environment", "pollution"],
-};
-
-function matchesDomain(article, domain) {
-  if (domain === "ALL") return true;
-  const keywords = DOMAIN_KEYWORDS[domain] || [];
-  const text = `${article.title}`.toLowerCase();
-  return keywords.some((kw) => text.includes(kw));
-}
-
 export default function Sidebar({ activeDomain = "ALL" }) {
   const [blinking, setBlinking] = useState(true);
   const [articles, setArticles] = useState([]);
@@ -29,12 +14,14 @@ export default function Sidebar({ activeDomain = "ALL" }) {
     return () => clearInterval(t);
   }, []);
 
-  // Fetch real articles + stats from backend
+  // Fetch real articles + stats from backend, filtered by domain
   useEffect(() => {
     async function fetchData() {
+      setLoading(true);
       try {
+        const domainParam = activeDomain !== "ALL" ? `&domain=${activeDomain}` : "";
         const [articlesRes, statsRes] = await Promise.all([
-          fetch(`${API}/articles?limit=50`),
+          fetch(`${API}/articles?limit=10${domainParam}`),
           fetch(`${API}/stats`),
         ]);
         const articlesData = await articlesRes.json();
@@ -53,12 +40,7 @@ export default function Sidebar({ activeDomain = "ALL" }) {
     // Refresh every 5 minutes
     const interval = setInterval(fetchData, 5 * 60 * 1000);
     return () => clearInterval(interval);
-  }, []);
-
-  // Filter articles by active domain
-  const filteredArticles = articles
-    .filter((article) => matchesDomain(article, activeDomain))
-    .slice(0, 10);
+  }, [activeDomain]);
 
   function formatTime(dateStr) {
     if (!dateStr) return "—";
@@ -93,10 +75,18 @@ export default function Sidebar({ activeDomain = "ALL" }) {
     const map = {
       the_hindu_international: "THE HINDU",
       the_hindu_national: "THE HINDU",
+      the_hindu_tech: "THE HINDU",
+      the_hindu_climate: "THE HINDU",
+      the_hindu_business: "THE HINDU",
+      the_hindu_society: "THE HINDU",
       NDTV_India: "NDTV",
+      ndtv_defence: "NDTV",
       BBCnews_India: "BBC",
       reuters_india: "REUTERS",
       pib_india: "PIB",
+      inc42_tech: "INC42",
+      economic_times: "ECON TIMES",
+      times_defence: "TOI",
     };
     return map[source] || source?.toUpperCase() || "FEED";
   }
@@ -136,7 +126,7 @@ export default function Sidebar({ activeDomain = "ALL" }) {
           <div style={styles.statDivider} />
           <div style={styles.statItem}>
             <span style={styles.statNumber}>
-              {filteredArticles.length}
+              {articles.length}
             </span>
             <span style={styles.statLabel}>SHOWING</span>
           </div>
@@ -147,12 +137,12 @@ export default function Sidebar({ activeDomain = "ALL" }) {
       <div style={styles.feedList}>
         {loading ? (
           <div style={styles.loadingText}>LOADING FEED...</div>
-        ) : filteredArticles.length === 0 ? (
+        ) : articles.length === 0 ? (
           <div style={styles.loadingText}>
             NO {activeDomain !== "ALL" ? activeDomain : ""} ARTICLES FOUND
           </div>
         ) : (
-          filteredArticles.map((article, index) => {
+          articles.map((article, index) => {
             const status = getStatus(index);
             return (
               <div

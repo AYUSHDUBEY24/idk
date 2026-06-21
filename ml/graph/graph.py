@@ -32,11 +32,14 @@ def build_graph():
 
     cursor.execute("""
         SELECT e1.article_id, e1.text as entity1, e1.label as label1,
-               e2.text as entity2, e2.label as label2
-        FROM entities e1
-        JOIN entities e2
-        ON e1.article_id = e2.article_id
-        AND e1.id < e2.id
+           e2.text as entity2, e2.label as label2,
+           a.domain as domain
+    FROM entities e1
+    JOIN entities e2
+    ON e1.article_id = e2.article_id
+    AND e1.id < e2.id
+    JOIN articles a
+    ON a.id = e1.article_id
     """)
 
     pairs = cursor.fetchall()
@@ -46,14 +49,15 @@ def build_graph():
         for pair in pairs:
             session.run("""
                 MERGE (a:Entity {name: $name1, label: $label1})
-                MERGE (b:Entity {name: $name2, label: $label2})
-                MERGE (a)-[:CO_MENTIONED {article_id: $article_id}]->(b)
-            """, {
-                "name1": pair["entity1"],
-                "label1": pair["label1"],
-                "name2": pair["entity2"],
-                "label2": pair["label2"],
-                "article_id": pair["article_id"]
+                        MERGE (b:Entity {name: $name2, label: $label2})
+                        MERGE (a)-[:CO_MENTIONED {article_id: $article_id, domain: $domain}]->(b)
+                        """, {
+                            "name1": pair["entity1"],
+                            "label1": pair["label1"],
+                            "name2": pair["entity2"],
+                            "label2": pair["label2"],
+                            "article_id": pair["article_id"],
+                            "domain": pair["domain"] or "GEO"
             })
 
     print("Graph built successfully!")

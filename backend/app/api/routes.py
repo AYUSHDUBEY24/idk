@@ -31,16 +31,16 @@ def query(request: QueryRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/articles")
-def articles(limit: int = 20):
-    return get_latest_articles(limit)
+def articles(limit: int = 20, domain: str = None):
+    return get_latest_articles(limit, domain)
 
 @router.get("/stats")
 def stats():
     return get_article_stats()
 
 @router.get("/graph/entities")
-def graph_entities(limit: int = 50):
-    return get_top_entities(limit)
+def graph_entities(limit: int = 50, domain: str = None):
+    return get_top_entities(limit, domain)
 
 @router.get("/graph/entity/{name}")
 def entity_connections(name: str):

@@ -3,48 +3,42 @@ import { Group, Panel, Separator } from "react-resizable-panels";
 
 const LAYERS_DATA = [
   {
-    id: "intel_nodes",
+    id: "geo_entities",
     icon: "◈",
-    label: "INTELLIGENCE NODES",
-    color: "#c8922a",
+    label: "GEOPOLITICAL ENTITIES",
+    color: "#3ddc84",
     defaultOn: true,
   },
-  { id: "pipelines", icon: "⬡", label: "PIPELINES", color: "#e07a3a" },
-  { id: "storage", icon: "⊟", label: "STORAGE FACILITIES", color: "#c8922a" },
-  { id: "fuel", icon: "⊙", label: "FUEL SHORTAGES", color: "#e05252" },
-  { id: "ai", icon: "⬜", label: "AI DATA CENTERS", color: "#4ab8e8" },
   {
-    id: "military",
+    id: "defense_entities",
     icon: "✈",
-    label: "MILITARY ACTIVITY",
+    label: "DEFENSE ENTITIES",
     color: "#4a8ae8",
-    defaultOn: true,
   },
-  { id: "ships", icon: "⚓", label: "SHIP TRAFFIC", color: "#3ddc84" },
-  { id: "trade", icon: "⚓", label: "TRADE ROUTES", color: "#c8922a" },
-  { id: "aviation", icon: "✈", label: "AVIATION", color: "#8a6ae0" },
-  { id: "protests", icon: "⚑", label: "PROTESTS", color: "#e0a83a" },
-  { id: "armed", icon: "⚑", label: "ARMED CONFLICT EVENTS", color: "#e05252" },
+  { id: "tech_entities", icon: "⬜", label: "TECH ENTITIES", color: "#4ab8e8" },
+  {
+    id: "climate_entities",
+    icon: "⊙",
+    label: "CLIMATE ENTITIES",
+    color: "#3ddc84",
+  },
+  { id: "person_entities", icon: "●", label: "KEY PERSONS", color: "#c8922a" },
 ];
+
 const DOMAIN_LAYER_MAP = {
   ALL: [
-    "intel_nodes",
-    "military",
-    "pipelines",
-    "protests",
-    "armed",
-    "ai",
-    "fuel",
-    "aviation",
-    "storage",
-    "ships",
-    "trade",
+    "geo_entities",
+    "defense_entities",
+    "tech_entities",
+    "climate_entities",
+    "person_entities",
   ],
-  GEO: ["intel_nodes", "armed", "protests"],
-  DEFENSE: ["intel_nodes", "military", "ships", "pipelines"],
-  TECH: ["intel_nodes", "ai", "aviation"],
-  CLIMATE: ["intel_nodes", "fuel"],
+  GEO: ["geo_entities", "person_entities"],
+  DEFENSE: ["defense_entities", "person_entities"],
+  TECH: ["tech_entities"],
+  CLIMATE: ["climate_entities"],
 };
+
 const COUNTRY_COORDS = {
   Iran: [32.4, 53.7],
   India: [20.6, 78.9],
@@ -65,68 +59,6 @@ const COUNTRY_COORDS = {
   NATO: [50.9, 4.3],
   Gaza: [31.4, 34.3],
 };
-const MARKERS = {
-  military: [
-    { lat: 28.6, lng: 77.2, label: "New Delhi — Op Zone" },
-    { lat: 19.0, lng: 73.0, label: "Mumbai — Naval Base" },
-    { lat: 13.0, lng: 80.2, label: "Chennai — Air Command" },
-    { lat: 51.5, lng: -0.1, label: "London — NATO HQ" },
-    { lat: 55.75, lng: 37.6, label: "Moscow — Defense Min" },
-    { lat: 39.9, lng: 116.4, label: "Beijing — Command" },
-    { lat: 38.9, lng: -77.0, label: "Washington — Pentagon" },
-  ],
-  ships: [
-    { lat: 12.0, lng: 45.0, label: "Gulf of Aden — Convoy" },
-    { lat: 1.2, lng: 104.0, label: "Strait of Malacca" },
-    { lat: 30.0, lng: 32.5, label: "Suez — Transit" },
-    { lat: -6.0, lng: 39.0, label: "Dar es Salaam Port" },
-  ],
-  trade: [
-    { lat: 22.3, lng: 114.2, label: "Hong Kong — Trade Hub" },
-    { lat: 1.3, lng: 103.8, label: "Singapore Port" },
-    { lat: 51.9, lng: 4.5, label: "Rotterdam" },
-    { lat: 34.0, lng: -118.2, label: "Los Angeles Port" },
-  ],
-  armed: [
-    { lat: 15.5, lng: 32.5, label: "Sudan Conflict Zone", pulse: true },
-    { lat: 48.4, lng: 35.0, label: "Ukraine Frontline", pulse: true },
-    { lat: 31.5, lng: 35.0, label: "Gaza — Active", pulse: true },
-    { lat: 15.0, lng: 42.0, label: "Yemen — Air Strikes", pulse: true },
-  ],
-  protests: [
-    { lat: 41.0, lng: 29.0, label: "Istanbul — Rally" },
-    { lat: 48.9, lng: 2.3, label: "Paris — Demonstration" },
-    { lat: -26.2, lng: 28.0, label: "Johannesburg" },
-  ],
-  fuel: [
-    { lat: 23.6, lng: -102.5, label: "Mexico — Shortage" },
-    { lat: -8.8, lng: 13.2, label: "Luanda Fuel Crisis" },
-    { lat: 6.5, lng: 3.4, label: "Lagos — Scarcity" },
-  ],
-  ai: [
-    { lat: 37.4, lng: -122.1, label: "Silicon Valley DC" },
-    { lat: 53.3, lng: -6.3, label: "Dublin Cloud Hub" },
-    { lat: 35.7, lng: 139.7, label: "Tokyo Data Center" },
-    { lat: 22.5, lng: 114.1, label: "Shenzhen AI Campus" },
-  ],
-  pipelines: [
-    { lat: 57.0, lng: 65.0, label: "Trans-Siberian Pipeline" },
-    { lat: 41.0, lng: 49.0, label: "BTC Pipeline — Baku" },
-    { lat: 36.0, lng: 58.0, label: "Iran — Gas Corridor" },
-    { lat: 27.0, lng: 53.0, label: "Persian Gulf Line" },
-  ],
-  storage: [
-    { lat: 26.0, lng: 50.5, label: "Saudi Aramco — Ras Tanura" },
-    { lat: 29.3, lng: 47.9, label: "Kuwait Storage Terminal" },
-    { lat: 24.4, lng: 54.4, label: "Abu Dhabi Reserve" },
-  ],
-  aviation: [
-    { lat: 25.2, lng: 55.4, label: "Dubai — Aviation Hub" },
-    { lat: 51.5, lng: -0.5, label: "Heathrow — IFR Zone" },
-    { lat: 40.6, lng: -73.8, label: "JFK — Airspace" },
-    { lat: 35.5, lng: 139.8, label: "Tokyo Narita" },
-  ],
-};
 
 function markerHtml(color, pulse) {
   if (pulse) {
@@ -136,6 +68,34 @@ function markerHtml(color, pulse) {
     </div>`;
   }
   return `<div style="width:9px;height:9px;border-radius:50%;background:${color};box-shadow:0 0 6px ${color};border:1px solid rgba(255,255,255,0.25);"></div>`;
+}
+const DEFENSE_KEYWORDS = [
+  "military",
+  "army",
+  "navy",
+  "defence",
+  "defense",
+  "pentagon",
+  "nato",
+  "missile",
+];
+const TECH_KEYWORDS = [
+  "google",
+  "microsoft",
+  "openai",
+  "isro",
+  "nasa",
+  "meta",
+  "apple",
+  "inc42",
+];
+
+function classifyEntity(entity, activeDomain) {
+  if (entity.label === "PERSON") return "person_entities";
+  if (activeDomain === "DEFENSE") return "defense_entities";
+  if (activeDomain === "TECH") return "tech_entities";
+  if (activeDomain === "CLIMATE") return "climate_entities";
+  return "geo_entities";
 }
 
 export default function WorldMap({ activeDomain = "ALL" }) {
@@ -186,27 +146,9 @@ export default function WorldMap({ activeDomain = "ALL" }) {
 
     LAYERS_DATA.forEach((layer) => {
       const group = L.layerGroup();
-      (MARKERS[layer.id] || []).forEach((m) => {
-        const icon = L.divIcon({
-          html: markerHtml(layer.color, m.pulse),
-          className: "",
-          iconSize: [22, 22],
-          iconAnchor: [11, 11],
-        });
-        L.marker([m.lat, m.lng], { icon })
-          .bindPopup(
-            `<div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:#d4cfc8;background:#0f1214;border:1px solid #2a3038;padding:8px 12px;border-radius:3px;min-width:160px;">${m.label}</div>`,
-            { className: "goe-popup", closeButton: false },
-          )
-          .addTo(group);
-      });
       groups.current[layer.id] = group;
       if (layer.defaultOn) group.addTo(map);
     });
-    // Intel nodes group
-    const intelGroup = L.layerGroup();
-    groups.current["intel_nodes"] = intelGroup;
-    if (true) intelGroup.addTo(map); // default on
     mapObj.current = map;
 
     const resizeObserver = new ResizeObserver(() => {
@@ -224,11 +166,12 @@ export default function WorldMap({ activeDomain = "ALL" }) {
     };
   }, []);
   useEffect(() => {
-    fetch("http://localhost:8000/api/graph/entities?limit=30")
+    const domainParam = activeDomain !== "ALL" ? `&domain=${activeDomain}` : "";
+    fetch(`http://localhost:8000/api/graph/entities?limit=30${domainParam}`)
       .then((r) => r.json())
       .then((data) => setIntelEntities(data))
       .catch(() => {});
-  }, []);
+  }, [activeDomain]);
 
   useEffect(() => {
     const map = mapObj.current;
@@ -251,9 +194,9 @@ export default function WorldMap({ activeDomain = "ALL" }) {
     const L = window.L;
     if (!map || !L || intelEntities.length === 0) return;
 
-    const group = groups.current["intel_nodes"];
-    if (!group) return;
-    group.clearLayers();
+    LAYERS_DATA.forEach((l) => {
+      groups.current[l.id]?.clearLayers();
+    });
 
     const maxConn = Math.max(...intelEntities.map((e) => e.connections || 1));
 
@@ -261,23 +204,21 @@ export default function WorldMap({ activeDomain = "ALL" }) {
       const coords = COUNTRY_COORDS[entity.name];
       if (!coords) return;
 
+      const bucket = classifyEntity(entity, activeDomain);
+      const group = groups.current[bucket];
+      if (!group) return;
+
+      const layerColor =
+        LAYERS_DATA.find((l) => l.id === bucket)?.color || "#c8922a";
       const size = Math.max(
         8,
         Math.min(24, (entity.connections / maxConn) * 24),
       );
-      const color =
-        entity.label === "PERSON"
-          ? "#c8922a"
-          : entity.label === "ORG"
-            ? "#4a9eff"
-            : entity.label === "NORP"
-              ? "#e07a3a"
-              : "#c8922a";
 
       const html = `
       <div style="position:relative;display:flex;align-items:center;justify-content:center;width:${size + 8}px;height:${size + 8}px;">
-        <div style="position:absolute;width:${size + 8}px;height:${size + 8}px;border-radius:50%;background:${color};opacity:0.15;animation:mapPulse 2s ease-out infinite;"></div>
-        <div style="width:${size}px;height:${size}px;border-radius:50%;background:${color};opacity:0.85;box-shadow:0 0 ${size}px ${color};border:1px solid rgba(255,255,255,0.3);display:flex;align-items:center;justify-content:center;">
+        <div style="position:absolute;width:${size + 8}px;height:${size + 8}px;border-radius:50%;background:${layerColor};opacity:0.15;animation:mapPulse 2s ease-out infinite;"></div>
+        <div style="width:${size}px;height:${size}px;border-radius:50%;background:${layerColor};opacity:0.85;box-shadow:0 0 ${size}px ${layerColor};border:1px solid rgba(255,255,255,0.3);display:flex;align-items:center;justify-content:center;">
           <span style="font-family:'Share Tech Mono',monospace;font-size:${Math.max(6, size / 3)}px;color:#000;font-weight:700;">${entity.connections}</span>
         </div>
       </div>`;
@@ -292,14 +233,14 @@ export default function WorldMap({ activeDomain = "ALL" }) {
       L.marker(coords, { icon })
         .bindPopup(
           `<div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:#d4cfc8;background:#0f1214;border:1px solid #2a3038;padding:8px 12px;border-radius:3px;min-width:160px;">
-          <div style="color:#c8922a;font-weight:700;margin-bottom:4px;">${entity.name}</div>
+          <div style="color:${layerColor};font-weight:700;margin-bottom:4px;">${entity.name}</div>
           <div style="color:#6a6865;">${entity.label} · ${entity.connections} connections</div>
         </div>`,
           { className: "goe-popup", closeButton: false },
         )
         .addTo(group);
     });
-  }, [intelEntities]);
+  }, [intelEntities, activeDomain]);
   return (
     <div style={s.root}>
       <style>{`
